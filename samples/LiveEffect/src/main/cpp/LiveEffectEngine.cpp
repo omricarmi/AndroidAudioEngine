@@ -15,6 +15,7 @@
  */
 
 #include "LiveEffectEngine.h"
+#include "ProcessAudio.h"
 #include <assert.h>
 #include <logging_macros.h>
 #include <climits>
@@ -131,7 +132,9 @@ void LiveEffectEngine::openRecordingStream() {
     if (result == oboe::Result::OK && mRecordingStream) {
         assert(mRecordingStream->getChannelCount() == mInputChannelCount);
         assert(mRecordingStream->getSampleRate() == mSampleRate);
-        assert(mRecordingStream->getFormat() == oboe::AudioFormat::I16);
+        //TODO why assert with oboe::AudioFormat::I16 and not mFormat
+//        assert(mRecordingStream->getFormat() == oboe::AudioFormat::I16);
+        assert(mRecordingStream->getFormat() == mFormat);
 
         warnIfNotLowLatency(mRecordingStream);
     } else {
@@ -154,7 +157,9 @@ void LiveEffectEngine::openPlaybackStream() {
     if (result == oboe::Result::OK && mPlayStream) {
         mSampleRate = mPlayStream->getSampleRate();
 
-        assert(mPlayStream->getFormat() == oboe::AudioFormat::I16);
+        //TODO why assert with oboe::AudioFormat::I16 and not mFormat
+//        assert(mPlayStream->getFormat() == oboe::AudioFormat::I16);
+        assert(mPlayStream->getFormat() == mFormat);
         assert(mOutputChannelCount == mPlayStream->getChannelCount());
 
         mSystemStartupFrames =
@@ -321,14 +326,21 @@ oboe::DataCallbackResult LiveEffectEngine::onAudioReady(
 
         framesRead = prevFrameRead;
     } else {
-        oboe::ResultWithValue<int32_t> status =
-            mRecordingStream->read(audioData, numFrames, 0);
-        if (!status) {
-            LOGE("input stream read error: %s",
-                 oboe::convertToText(status.error()));
-            return oboe::DataCallbackResult ::Stop;
+//        oboe::ResultWithValue<int32_t> status =
+//            mRecordingStream->read(audioData, numFrames, 0); // input->output without processing
+        if (numFrames > 0){
+            oboe::ResultWithValue<int32_t> status =
+                    mRecordingStream->read(mBuffer, numFrames, 0);
+            if (!status) {
+                LOGE("input stream read error: %s",
+                     oboe::convertToText(status.error()));
+                return oboe::DataCallbackResult ::Stop;
+            }
+            framesRead = status.value();
+            // TODO process audio here before sent back to output playback
+            processAudio(mBuffer,mRecordingStream->getChannelCount(),framesRead,
+                    static_cast<float *>(audioData),mPlayStream->getChannelCount(),framesRead);
         }
-        framesRead = status.value();
     }
 
     if (framesRead < numFrames) {

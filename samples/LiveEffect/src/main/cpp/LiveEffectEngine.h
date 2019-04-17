@@ -42,12 +42,14 @@ class LiveEffectEngine : public oboe::AudioStreamCallback {
     bool isAAudioSupported(void);
 
    private:
+    float mBuffer[16384] = {0}; // TODO make sure never get in one read more than mBuffer size. look in docs maybe.
     bool mIsEffectOn = false;
     uint64_t mProcessedFrameCount = 0;
     uint64_t mSystemStartupFrames = 0;
     int32_t mRecordingDeviceId = oboe::kUnspecified;
     int32_t mPlaybackDeviceId = oboe::kUnspecified;
-    oboe::AudioFormat mFormat = oboe::AudioFormat::I16;
+//    oboe::AudioFormat mFormat = oboe::AudioFormat::I16; // original example
+    oboe::AudioFormat mFormat = oboe::AudioFormat::Float;
     int32_t mSampleRate = oboe::kUnspecified;
     int32_t mInputChannelCount = oboe::ChannelCount::Stereo;
     int32_t mOutputChannelCount = oboe::ChannelCount::Stereo;
