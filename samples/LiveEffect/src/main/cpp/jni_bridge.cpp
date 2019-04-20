@@ -56,6 +56,19 @@ Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_setEffectOn(
 }
 
 JNIEXPORT void JNICALL
+Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_setBlockDataOn(
+        JNIEnv *env, jclass, jboolean isBlockDataOn) {
+    if (engine == nullptr) {
+        LOGE(
+                "Engine is null, you must call createEngine before calling this "
+                "method");
+        return;
+    }
+
+    engine->setBlockDataOn(isBlockDataOn);
+}
+
+JNIEXPORT void JNICALL
 Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_setRecordingDeviceId(
     JNIEnv *env, jclass, jint deviceId) {
     if (engine == nullptr) {
@@ -79,6 +92,32 @@ Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_setPlaybackDeviceId(
     }
 
     engine->setPlaybackDeviceId(deviceId);
+}
+
+JNIEXPORT void JNICALL
+Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_setSamplingRate(
+        JNIEnv *env, jclass, jint samplingRate) {
+    if (engine == nullptr) {
+        LOGE(
+                "Engine is null, you must call createEngine before calling this "
+                "method");
+        return;
+    }
+
+    engine->setSamplingRate(samplingRate);
+}
+
+JNIEXPORT jint JNICALL
+Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_getSamplingRate(
+        JNIEnv *env, jclass) {
+    if (engine == nullptr) {
+        LOGE(
+                "Engine is null, you must call createEngine before calling this "
+                "method");
+        return -1;
+    }
+
+    return engine->getSamplingRate();
 }
 
 JNIEXPORT jboolean JNICALL

@@ -2,10 +2,9 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 28
-
     defaultConfig {
         applicationId 'com.google.sample.oboe.liveeffect'
-        minSdkVersion 16
+        minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
         versionName '1.0'
@@ -28,6 +27,8 @@ android {
         cmake {
             path 'src/main/cpp/CMakeLists.txt'
         }
+    }
+    productFlavors {
     }
 }
 

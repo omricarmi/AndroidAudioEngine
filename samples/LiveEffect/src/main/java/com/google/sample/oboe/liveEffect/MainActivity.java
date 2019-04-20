@@ -19,7 +19,9 @@ package com.google.sample.oboe.liveEffect;
 import android.Manifest;
 import android.app.Activity;
 import android.content.pm.PackageManager;
+import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioRecord;
 import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
@@ -27,14 +29,20 @@ import androidx.core.app.ActivityCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.sample.audio_device.AudioDeviceListEntry;
 import com.google.sample.audio_device.AudioDeviceSpinner;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * TODO: Update README.md and go through and comment sample
@@ -55,11 +63,28 @@ public class MainActivity extends Activity
 
     private int apiSelection = OBOE_API_AAUDIO;
     private boolean aaudioSupported = true;
+    private Spinner sampleRatesSpinner;
+    private Switch switchBlockData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Sample Rate - START
+        List<Integer> sampleRatesList = getSupportedSampleRates();
+        sampleRatesSpinner = findViewById(R.id.spinner_sample_rates);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<Integer> adapter = new ArrayAdapter<Integer>(this,android.R.layout.simple_spinner_item,sampleRatesList);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        sampleRatesSpinner.setAdapter(adapter);
+        // Sample Rate - END
+
+        // Toggle Block data - START
+        switchBlockData = findViewById(R.id.switch_block_data);
+        // Toggle Block data - END
 
         statusText = findViewById(R.id.status_view_text);
         toggleEffectButton = findViewById(R.id.button_toggle_effect);
@@ -161,7 +186,31 @@ public class MainActivity extends Activity
         } else {
             EnableAudioApiUI(false);
             LiveEffectEngine.setAPI(apiSelection);
+            setSamplingRate();
+            setBlockDataSate();
             startEffect();
+            refreshSamplingRate();
+        }
+    }
+
+    private void setBlockDataSate() {
+        boolean isBlockDataOn = switchBlockData.isChecked();
+        LiveEffectEngine.setBlockDataOn(isBlockDataOn);
+    }
+
+    private void setSamplingRate() {
+            int samplingRate = (int) sampleRatesSpinner.getSelectedItem();
+            LiveEffectEngine.setSamplingRate(samplingRate);
+    }
+
+    private void refreshSamplingRate() {
+        int samplingRate = LiveEffectEngine.getSamplingRate();
+        List<Integer> sampleRates = getSupportedSampleRates();
+        for (int i = 0; i < sampleRates.size(); i++) {
+            if(sampleRates.get(i) == samplingRate){
+                sampleRatesSpinner.setSelection(i);
+                return;
+            }
         }
     }
 
@@ -173,7 +222,7 @@ public class MainActivity extends Activity
             return;
         }
 
-        setSpinnersEnabled(false);
+        setConfigurationEnabled(false);
         LiveEffectEngine.setEffectOn(true);
         statusText.setText(R.string.status_playing);
         toggleEffectButton.setText(R.string.stop_effect);
@@ -186,12 +235,14 @@ public class MainActivity extends Activity
         resetStatusView();
         toggleEffectButton.setText(R.string.start_effect);
         isPlaying = false;
-        setSpinnersEnabled(true);
+        setConfigurationEnabled(true);
     }
 
-    private void setSpinnersEnabled(boolean isEnabled){
+    private void setConfigurationEnabled(boolean isEnabled){
         recordingDeviceSpinner.setEnabled(isEnabled);
         playbackDeviceSpinner.setEnabled(isEnabled);
+        sampleRatesSpinner.setEnabled(isEnabled);
+        switchBlockData.setEnabled(isEnabled);
     }
 
     private int getRecordingDeviceId(){
@@ -240,5 +291,25 @@ public class MainActivity extends Activity
             // Permission was granted, start live effect
             toggleEffect();
         }
+    }
+
+    private List<Integer> getSupportedSampleRates() {
+
+        final int possibleValidSampleRates[] = new int[] {8000, 11025, 16000, 22050,
+                32000, 37800, 44056, 44100, 47250, 48000, 50000, 50400, 88200,
+                96000, 176400, 192000, 352800, 2822400, 5644800 };
+        List<Integer> validSampleRates = new ArrayList<Integer>();
+        for (int i = 0; i < possibleValidSampleRates.length; i++) {
+            int result = AudioRecord.getMinBufferSize(possibleValidSampleRates[i],
+                    AudioFormat.CHANNEL_OUT_STEREO,
+                    AudioFormat.ENCODING_PCM_FLOAT);
+            if (result != AudioRecord.ERROR
+                    && result != AudioRecord.ERROR_BAD_VALUE && result > 0) {
+                // got here if valid sample rate
+                validSampleRates.add(possibleValidSampleRates[i]);
+            }
+        }
+        // return the list of supported sample rates could be empty
+        return validSampleRates;
     }
 }

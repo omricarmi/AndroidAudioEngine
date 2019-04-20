@@ -21,6 +21,7 @@
 #include <oboe/Oboe.h>
 #include <string>
 #include <thread>
+#include "FifoBuffer.h"
 
 class LiveEffectEngine : public oboe::AudioStreamCallback {
    public:
@@ -28,7 +29,10 @@ class LiveEffectEngine : public oboe::AudioStreamCallback {
     ~LiveEffectEngine();
     void setRecordingDeviceId(int32_t deviceId);
     void setPlaybackDeviceId(int32_t deviceId);
+    void setSamplingRate(int32_t samplingRate);
+    int32_t getSamplingRate();
     void setEffectOn(bool isOn);
+    void setBlockDataOn(bool isOn);
 
     /*
      * oboe::AudioStreamCallback interface implementation
@@ -42,8 +46,9 @@ class LiveEffectEngine : public oboe::AudioStreamCallback {
     bool isAAudioSupported(void);
 
    private:
-    float mBuffer[16384] = {0}; // TODO make sure never get in one read more than mBuffer size. look in docs maybe.
+    float mBuffer[8*4096] = {0}; // TODO make sure never get in one read more than mBuffer size. look in docs maybe.
     bool mIsEffectOn = false;
+    bool mIsBlockDataOn = false;
     uint64_t mProcessedFrameCount = 0;
     uint64_t mSystemStartupFrames = 0;
     int32_t mRecordingDeviceId = oboe::kUnspecified;

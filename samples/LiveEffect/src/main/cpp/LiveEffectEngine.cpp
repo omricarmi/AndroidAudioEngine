@@ -187,7 +187,6 @@ oboe::AudioStreamBuilder *LiveEffectEngine::setupRecordingStreamParameters(
     builder->setCallback(nullptr)
         ->setDeviceId(mRecordingDeviceId)
         ->setDirection(oboe::Direction::Input)
-        ->setSampleRate(mSampleRate)
         ->setChannelCount(mInputChannelCount);
     return setupCommonStreamParameters(builder);
 }
@@ -221,6 +220,7 @@ oboe::AudioStreamBuilder *LiveEffectEngine::setupCommonStreamParameters(
     // mode.
     builder->setAudioApi(mAudioApi)
         ->setFormat(mFormat)
+        ->setSampleRate(mSampleRate)
         ->setSharingMode(oboe::SharingMode::Exclusive)
         ->setPerformanceMode(oboe::PerformanceMode::LowLatency);
     return builder;
@@ -316,9 +316,7 @@ oboe::DataCallbackResult LiveEffectEngine::onAudioReady(
             // Drain the audio for the starting up period, half second for
             // this sample.
             prevFrameRead = framesRead;
-
-            oboe::ResultWithValue<int32_t> status =
-                mRecordingStream->read(audioData, numFrames, 0);
+            oboe::ResultWithValue<int32_t> status = mRecordingStream->read(audioData, numFrames, 0);
             framesRead = (!status) ? 0 : status.value();
             if (framesRead == 0) break;
 
@@ -326,8 +324,6 @@ oboe::DataCallbackResult LiveEffectEngine::onAudioReady(
 
         framesRead = prevFrameRead;
     } else {
-//        oboe::ResultWithValue<int32_t> status =
-//            mRecordingStream->read(audioData, numFrames, 0); // input->output without processing
         if (numFrames > 0){
             oboe::ResultWithValue<int32_t> status =
                     mRecordingStream->read(mBuffer, numFrames, 0);
@@ -339,7 +335,7 @@ oboe::DataCallbackResult LiveEffectEngine::onAudioReady(
             framesRead = status.value();
             // TODO process audio here before sent back to output playback
             processAudio(mBuffer,mRecordingStream->getChannelCount(),framesRead,
-                    static_cast<float *>(audioData),mPlayStream->getChannelCount(),framesRead);
+                    static_cast<float *>(audioData),mPlayStream->getChannelCount(),numFrames,mIsBlockDataOn);
         }
     }
 
@@ -382,4 +378,16 @@ void LiveEffectEngine::onErrorAfterClose(oboe::AudioStream *oboeStream,
     LOGE("%s stream Error after close: %s",
          oboe::convertToText(oboeStream->getDirection()),
          oboe::convertToText(error));
+}
+
+void LiveEffectEngine::setSamplingRate(int32_t samplingRate) {
+    mSampleRate = samplingRate;
+}
+
+int32_t LiveEffectEngine::getSamplingRate() {
+    return mSampleRate;
+}
+
+void LiveEffectEngine::setBlockDataOn(bool isOn) {
+    mIsBlockDataOn = isOn;
 }

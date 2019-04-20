@@ -23,6 +23,15 @@
     tools:layout_editor_absoluteY="81dp">
 
     <TextView
+        android:id="@+id/playDeviceLabel2"
+        android:layout_width="wrap_content"
+        android:layout_height="27dp"
+        android:layout_marginStart="16dp"
+        android:text="Frequency"
+        app:layout_constraintBottom_toTopOf="@+id/spinner_sample_rates"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
         android:id="@+id/recDeviceLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -69,12 +78,12 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/activity_horizontal_margin"
-        android:layout_marginLeft="@dimen/activity_horizontal_margin"
-        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_marginTop="28dp"
         android:orientation="horizontal"
-        app:layout_constraintTop_toBottomOf="@+id/playback_devices_spinner"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toBottomOf="@+id/playback_devices_spinner">
 
         <TextView
             android:id="@+id/apiTextView"
@@ -103,14 +112,14 @@
         android:id="@+id/button_toggle_effect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="72dp"
+        android:layout_marginTop="24dp"
         android:gravity="center"
         android:text="@string/start_effect"
         android:textAllCaps="false"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.53"
+        app:layout_constraintHorizontal_bias="0.52"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/apiSelectionGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/switch_block_data" />
 
     <TextView
         android:id="@+id/status_view_text"
@@ -125,5 +134,27 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_toggle_effect"
         app:layout_constraintBottom_toBottomOf="parent" />
+
+    <Spinner
+        android:id="@+id/spinner_sample_rates"
+        android:layout_width="198dp"
+        android:layout_height="58dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="52dp"
+        android:layout_marginEnd="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.04"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/apiSelectionGroup" />
+
+    <Switch
+        android:id="@+id/switch_block_data"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="24dp"
+        android:text="Block data"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/spinner_sample_rates" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
