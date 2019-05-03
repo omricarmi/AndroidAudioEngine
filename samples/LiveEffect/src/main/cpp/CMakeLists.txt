@@ -26,7 +26,11 @@ add_subdirectory(${OBOE_DIR} ./oboe-bin)
 add_library(liveEffect
     SHARED
         LiveEffectEngine.cpp
-        ProcessAudio.cpp
+        DspCoProcessor.cpp
+        DspLab.cpp
+        DspLib.cpp
+        FFT.cpp
+        SignalProcessing.cpp
         FifoBuffer.cpp
         jni_bridge.cpp
         ${SAMPLE_ROOT_DIR}/debug-utils/trace.cpp)

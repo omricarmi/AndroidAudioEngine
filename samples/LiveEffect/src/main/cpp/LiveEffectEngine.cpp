@@ -15,7 +15,7 @@
  */
 
 #include "LiveEffectEngine.h"
-#include "ProcessAudio.h"
+#include "DspLab.h"
 #include <assert.h>
 #include <logging_macros.h>
 #include <climits>

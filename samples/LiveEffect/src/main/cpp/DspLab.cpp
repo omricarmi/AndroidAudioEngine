@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <cstring>
 #include <logging_macros.h>
-#include "ProcessAudio.h"
+#include "DspLab.h"
 
 const int BLOCK_SIZE = 4096;
 const int DATA_SAFETY_POWER = 8;
