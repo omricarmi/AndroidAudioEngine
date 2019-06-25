@@ -18,6 +18,7 @@ enum STEREO_SIDE {RIGHT = 0, LEFT};
 void processAudio(float *inData, int32_t inNumChannel, int32_t inNumFrames, float *outData,
                   int32_t outNumChannel, int32_t outNumFrames,bool isBlockDataOn) {
     const int32_t inNumSamples = inNumFrames * inNumChannel;
+    const int32_t outNumSamples = outNumFrames * outNumChannel;
     if (isBlockDataOn) {
         // aggregate input to buffer
         inBuffer.push(inData,inNumSamples);
