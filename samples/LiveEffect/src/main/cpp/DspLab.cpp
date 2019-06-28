@@ -2,45 +2,70 @@
 // Created by Omri Carmi on 13/04/2019.
 //
 
-#include <assert.h>
 #include <cstring>
+#include <iostream>
 #include <logging_macros.h>
+#include <mutex>
+#include <pthread.h>
 #include "DspLab.h"
 
+using namespace std;
+
 const int BLOCK_SIZE = 4096;
-const int DATA_SAFETY_POWER = 8;
-FifoBuffer<float,DATA_SAFETY_POWER*BLOCK_SIZE> inBuffer;
-FifoBuffer<float,DATA_SAFETY_POWER*BLOCK_SIZE> outBuffer;
-float inBlockData[DATA_SAFETY_POWER*BLOCK_SIZE];
-float outBlockData[DATA_SAFETY_POWER*BLOCK_SIZE];
+FifoBuffer<float,BLOCK_SIZE> inBuffer[2];
+FifoBuffer<float,BLOCK_SIZE> outBuffer[2];
 enum STEREO_SIDE {RIGHT = 0, LEFT};
+std::mutex currentBufferIdLock;
+int currentProcessBufferId;
+pthread_t tid;
+void* processBlockAudio(void*);
+
+void initOutBuffers() {
+    float zeros[BLOCK_SIZE] = {0};
+    outBuffer[0].pushAndOverride(zeros,BLOCK_SIZE);
+    outBuffer[1].pushAndOverride(zeros,BLOCK_SIZE);
+}
 
 void processAudio(float *inData, int32_t inNumChannel, int32_t inNumFrames, float *outData,
                   int32_t outNumChannel, int32_t outNumFrames,bool isBlockDataOn) {
     const int32_t inNumSamples = inNumFrames * inNumChannel;
     const int32_t outNumSamples = outNumFrames * outNumChannel;
     if (isBlockDataOn) {
-        // aggregate input to buffer
-        inBuffer.push(inData,inNumSamples);
-        // when input data in size of BLOCK_SIZE is available process it
-        if (inBuffer.size() >= BLOCK_SIZE*inNumChannel) {
-            inBuffer.pop(inBlockData,BLOCK_SIZE*inNumChannel);
-            processBlockAudio(inBlockData,outBlockData,BLOCK_SIZE,inNumChannel);
-            outBuffer.push(outBlockData,BLOCK_SIZE*inNumChannel);
+        // write in to input buffer
+        int inNumSamplesEffective = inBuffer[currentProcessBufferId^1].push(inData,inNumSamples);
+        // write out from output buffer
+        int outNumSamplesEffective = outBuffer[currentProcessBufferId^1].pop(outData,outNumSamples);
+        LOGD("In: %d, Out: %d",inNumSamplesEffective,outNumSamplesEffective);
+        // decide if time to switch buffers
+        bool isOutBufferEmpty = (outBuffer[currentProcessBufferId^1].size() == 0);
+        if (isOutBufferEmpty && currentBufferIdLock.try_lock()) {
+            currentProcessBufferId ^= 1;
+            pthread_create(&tid, NULL, &processBlockAudio, NULL);
+            currentBufferIdLock.unlock();
         }
-        // output process data as much as device can consume and as much as already has been processed
-        const int32_t outNumSamples = outNumFrames * outNumChannel;
-        outBuffer.pop(outData,outNumSamples);
     }else{
-        processBlockAudio(inData,outData,inNumFrames,inNumChannel);
+        memcpy(outData,inData,std::min(inNumSamples,outNumSamples) * sizeof(float));
     }
 }
 
-//frames and channels sizes are the same at input and ouput
-void processBlockAudio(float *inData, float *outData, int32_t numChannel, int32_t numFrames) {
-    const int32_t numSamples = numFrames * numChannel;
-    /** example of moving sound untouched to output **/
-    memcpy(outData,inData,numSamples* sizeof(float));
+void* processBlockAudio(void* arg) {
+    //TODO maybe don't lock all the life of the func. do a loop and lock at each inner iteration.
+    float blockDataTmp[BLOCK_SIZE];
+    currentBufferIdLock.lock();
+    // read from input
+    int blockSizeEffective = inBuffer[currentProcessBufferId].pop(blockDataTmp,BLOCK_SIZE);
+    // process Example amplify by factor of 10
+    for (int i = 1; i < BLOCK_SIZE; ++i) {
+      blockDataTmp[i] *= 10;
+    }
+    // write to output
+    outBuffer[currentProcessBufferId].push(blockDataTmp,blockSizeEffective);
+    currentBufferIdLock.unlock();
+
+    return NULL;
+//    const int32_t numSamples = numFrames * numChannel;
+//    /** example of moving sound untouched to output **/
+//    memcpy(outData,inData,numSamples* sizeof(float));
 //    /** OR **/
 //    for (int i = 0; i < numSamples; ++i) {
 //        outData[i] = inData[i];
@@ -58,4 +83,8 @@ void processBlockAudio(float *inData, float *outData, int32_t numChannel, int32_
 //            outData[i] = inData[i];
 //        }
 //    }
+}
+
+void debugExample() {
+    LOGD("debug example called.");
 }

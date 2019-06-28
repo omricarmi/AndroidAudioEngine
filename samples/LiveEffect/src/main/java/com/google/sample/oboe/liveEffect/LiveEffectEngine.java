@@ -42,4 +42,6 @@ public enum LiveEffectEngine {
     static native void setSamplingRate(int samplingRate);
     static native int getSamplingRate();
     static native void delete();
+    static native void debug();
 }
+

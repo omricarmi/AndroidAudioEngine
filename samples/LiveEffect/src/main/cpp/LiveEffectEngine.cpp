@@ -64,6 +64,7 @@ void LiveEffectEngine::setEffectOn(bool isOn) {
         mIsEffectOn = isOn;
 
         if (isOn) {
+            initOutBuffers(); // reset output buffer for start of delay of buffer with flat noise
             openAllStreams();
         } else {
             closeAllStreams();

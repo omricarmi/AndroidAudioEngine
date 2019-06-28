@@ -7,7 +7,10 @@
 
 #include <cstdint>
 #include "FifoBuffer.h"
+
+void initOutBuffers();
 void processAudio(float *inData, int32_t inNumChannel, int32_t inNumFrames, float *outData,
                   int32_t outNumChannel, int32_t outNumFrames,bool isBlockDataOn);
-void processBlockAudio(float *inData, float *outData, int32_t numChannel, int32_t numFrames);
+void debugExample();
+
 #endif //SAMPLES_DSAPLAB_H

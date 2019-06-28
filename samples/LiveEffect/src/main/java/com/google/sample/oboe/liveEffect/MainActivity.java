@@ -86,6 +86,15 @@ public class MainActivity extends Activity
         switchBlockData = findViewById(R.id.switch_block_data);
         // Toggle Block data - END
 
+        // Toggle Block data - START
+        findViewById(R.id.btn_debug).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LiveEffectEngine.debug();
+            }
+        });
+        // Toggle Block data - END
+
         statusText = findViewById(R.id.status_view_text);
         toggleEffectButton = findViewById(R.id.button_toggle_effect);
         toggleEffectButton.setOnClickListener(new View.OnClickListener() {

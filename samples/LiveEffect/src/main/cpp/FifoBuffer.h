@@ -28,9 +28,7 @@ private:
 
 template<class T, int32_t SIZE>
 int32_t FifoBuffer<T, SIZE>::push(T *source, int32_t size) {
-    if(size + mSize > mSizeFull){
-        return -1;
-    }
+    size = (size > mSizeFull - mSize) ? (mSizeFull - mSize) : size;
     for (int i = 0; i < size; ++i) {
         int nextWriteIdx = (mNextWriteIdx + i) % mSizeFull;
         mData[nextWriteIdx] = source[i];
@@ -47,10 +45,10 @@ int32_t FifoBuffer<T, SIZE>::pushAndOverride(T *source, int32_t size) {
         mData[nextWriteIdx] = source[i];
     }
     mNextWriteIdx = (mNextWriteIdx + size) % mSizeFull;
-    mSize = (size + mSize) % mSizeFull;
+    mSize = ((size + mSize) < mSizeFull) ? (size + mSize) : mSizeFull;
     // if we override data we need to increment the read to the "new oldest" data
     if (size + mSize > mSizeFull) {
-        mNextReadIdx = (mNextWriteIdx+1) % mSizeFull;
+        mNextReadIdx = (mNextWriteIdx) % mSizeFull;
     }
     return size;
 }

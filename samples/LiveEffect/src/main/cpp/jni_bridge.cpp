@@ -17,7 +17,7 @@
 #include <jni.h>
 #include <logging_macros.h>
 #include "LiveEffectEngine.h"
-
+#include "DspLab.h"
 static const int kOboeApiAAudio = 0;
 static const int kOboeApiOpenSLES = 1;
 
@@ -160,4 +160,11 @@ Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_isAAudioSupported(
     return static_cast<jboolean>(engine->isAAudioSupported() ? JNI_TRUE
                                                              : JNI_FALSE);
 }
+
+JNIEXPORT void JNICALL
+Java_com_google_sample_oboe_liveEffect_LiveEffectEngine_debug(
+        JNIEnv *env, jclass type) {
+    debugExample();
+}
+
 }
