@@ -21,8 +21,8 @@ enum STEREO_SIDE {RIGHT = 0, LEFT};
 std::mutex currentBufferIdLock;
 int currentProcessBufferId;
 pthread_t tid;
-void* processBlockAudio(void*);
-
+void* processBlockAudioBackend(void*);
+float measureTimeMiliSec(struct timeval *tvBefore,struct timeval *tvAfter);
 void initOutBuffers() {
     float zeros[BLOCK_SIZE] = {0};
     outBuffer[0].pushAndOverride(zeros,BLOCK_SIZE);
@@ -43,7 +43,7 @@ void processAudioBackend(float *inData, int32_t inNumChannel, int32_t inNumFrame
         bool isOutBufferEmpty = (outBuffer[currentProcessBufferId^1].size() == 0);
         if (isOutBufferEmpty && currentBufferIdLock.try_lock()) {
             currentProcessBufferId ^= 1;
-            pthread_create(&tid, NULL, &processBlockAudio, NULL);
+            pthread_create(&tid, NULL, &processBlockAudioBackend, NULL);
             currentBufferIdLock.unlock();
         }
     }else{
@@ -53,6 +53,10 @@ void processAudioBackend(float *inData, int32_t inNumChannel, int32_t inNumFrame
 
 float blockDataOutTmp[BLOCK_SIZE];
 float blockDataInTmp[BLOCK_SIZE];
+struct timeval timeBefore;
+struct timeval timeAfter;
+bool timeMeasureSuccess = true;
+float timeTookMs;
 void* processBlockAudioBackend(void *arg) {
     //TODO maybe don't lock all the life of the func. do a loop and lock at each inner iteration.
     currentBufferIdLock.lock();
@@ -62,12 +66,28 @@ void* processBlockAudioBackend(void *arg) {
     for (int i = blockSizeEffective; i < BLOCK_SIZE; ++i) {
         blockDataInTmp[i] = 0;
     }
+    // measure time before process
+    timeMeasureSuccess = true;
+    if (gettimeofday(&timeBefore,NULL) != 0){
+        LOGE("Failed to measure time for audio processing!\n");
+        timeMeasureSuccess = false;
+    }
     // call audio process frontend
     processAudio(blockDataInTmp,blockDataOutTmp);
+    // measure time after process
+    if (timeMeasureSuccess && gettimeofday(&timeAfter,NULL) != 0){
+        LOGE("Failed to measure time for audio processing!\n");
+        timeMeasureSuccess = false;
+    }
     // write to output
     outBuffer[currentProcessBufferId].push(blockDataOutTmp,BLOCK_SIZE);
     currentBufferIdLock.unlock();
-
+    // log time measurement
+    if (timeMeasureSuccess)
+    {
+        timeTookMs = measureTimeMiliSec(&timeBefore,&timeAfter);
+        LOGD("Block Process Took[msec]: %.2f",timeTookMs);
+    }
     return NULL;
 //    const int32_t numSamples = numFrames * numChannel;
 //    /** example of moving sound untouched to output **/
@@ -93,4 +113,11 @@ void* processBlockAudioBackend(void *arg) {
 
 void debugExample() {
     LOGD("debug example called.");
+}
+
+float measureTimeMiliSec(struct timeval *tvBefore,struct timeval *tvAfter)
+{
+    return
+    static_cast<float>((tvAfter->tv_sec - tvBefore->tv_sec) * 1e6 + (tvAfter->tv_usec - tvBefore->tv_usec))
+            / 1000.0f;
 }
