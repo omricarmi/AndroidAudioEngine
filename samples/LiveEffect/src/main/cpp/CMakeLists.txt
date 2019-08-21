@@ -27,6 +27,7 @@ add_library(liveEffect
     SHARED
         LiveEffectEngine.cpp
         DspCoProcessor.cpp
+        DspLabBackend.cpp
         DspLab.cpp
         DspLib.cpp
         FFT.cpp

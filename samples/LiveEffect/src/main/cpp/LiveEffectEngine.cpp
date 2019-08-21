@@ -15,7 +15,7 @@
  */
 
 #include "LiveEffectEngine.h"
-#include "DspLab.h"
+#include "DspLabBackend.h"
 #include <assert.h>
 #include <logging_macros.h>
 #include <climits>
@@ -335,7 +335,7 @@ oboe::DataCallbackResult LiveEffectEngine::onAudioReady(
             }
             framesRead = status.value();
             // TODO process audio here before sent back to output playback
-            processAudio(mBuffer,mRecordingStream->getChannelCount(),framesRead,
+            processAudioBackend(mBuffer,mRecordingStream->getChannelCount(),framesRead,
                     static_cast<float *>(audioData),mPlayStream->getChannelCount(),numFrames,mIsBlockDataOn);
         }
     }

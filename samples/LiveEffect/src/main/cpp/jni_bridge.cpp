@@ -17,7 +17,7 @@
 #include <jni.h>
 #include <logging_macros.h>
 #include "LiveEffectEngine.h"
-#include "DspLab.h"
+#include "DspLabBackend.h"
 static const int kOboeApiAAudio = 0;
 static const int kOboeApiOpenSLES = 1;
 
